@@ -6,12 +6,15 @@ import {
   TouchableOpacity,
   Text,
   ImageBackground,
-  Image
+  Image,
+  Alert,
+  ToastAndroid,
+  KeyboardAvoidingView
 } from 'react-native'
 import * as Permissions from 'expo-permissions'
 import { BarCodeScanner } from 'expo-barcode-scanner'
-import firebase from 'firebase'
 import db from '../config'
+import firebase from 'firebase'
 
 const bgImage = require('../assets/background2.png')
 const appIcon = require('../assets/appIcon.png')
@@ -62,24 +65,43 @@ export default class TransactionScreen extends Component {
     }
   }
 
+  //bp
   handleTransaction = async () => {
     var { bookId, studentId } = this.state
     await this.getBookDetails(bookId)
     await this.getStudentDetails(studentId)
 
-    db.collection('books')
-      .doc(bookId)
-      .get()
-      .then(doc => {
-        var book = doc.data()
-        if (book.is_book_available) {
-          var { bookName, studentName } = this.state
-          this.initiateBookIssue(bookId, studentId, bookName, studentName)
-        } else {
-          var { bookName, studentName } = this.state
-          this.initiateBookReturn(bookId, studentId, bookName, studentName)
-        }
-      })
+    // var transactionType = await this.checkBookAvailability(bookId)
+
+    if (!transactionType) {
+      this.setState({ bookId: '', studentId: '' })
+      // Apenas para usuários do Android
+      // ToastAndroid.show("O livro não existe no banco de dados da biblioteca!", ToastAndroid.SHORT);
+      //   Alert.alert('O livro não existe no banco de dados da biblioteca!')
+      // } else if (transactionType === 'issue') {
+      //   var isEligible = await this.checkStudentEligibilityForBookIssue(studentId)
+
+      if (isEligible) {
+        var { bookName, studentName } = this.state
+        this.initiateBookIssue(bookId, studentId, bookName, studentName)
+      }
+      // For Android users only
+      // ToastAndroid.show("Livro devolvido à biblioteca!", ToastAndroid.SHORT);
+      Alert.alert('Livro devolvido à biblioteca!')
+    } else {
+      // var isEligible = await this.checkStudentEligibilityForBookReturn(
+      //   bookId,
+      //   studentId
+      // )
+
+      if (isEligible) {
+        var { bookName, studentName } = this.state
+        this.initiateBookReturn(bookId, studentId, bookName, studentName)
+      }
+      // For Android users only
+      // ToastAndroid.show("Livro devolvido à biblioteca!", ToastAndroid.SHORT);
+      Alert.alert('Livro devolvido à biblioteca!')
+    }
   }
 
   getBookDetails = bookId => {
@@ -109,6 +131,49 @@ export default class TransactionScreen extends Component {
         })
       })
   }
+
+  // checkBookAvailability = async bookId => {
+  //   const bookRef = await db
+  //     .collection('books')
+  //     .where('book_id', '==', bookId)
+  //     .get()
+
+  //   var transactionType = ''
+  //   if (bookRef.docs.length == 0) {
+  //     transactionType = false
+  //   } else {
+  //     bookRef.docs.map(doc => {
+  //       //se o livro estiver disponível, o tipo de transação será issue (entregar)
+  //       // caso contrário, será return (devolver)
+  //       transactionType = doc.data().is_book_available ? 'issue' : 'return'
+  //     })
+  //   }
+
+  //   return transactionType
+  // }
+
+  // checkStudentEligibilityForBookReturn = async (bookId, studentId) => {
+  //   const transactionRef = await db
+  //     .collection('transactions')
+  //     .where('book_id', '==', bookId)
+  //     .limit(1)
+  //     .get()
+  //   var isStudentEligible = ''
+  //   transactionRef.docs.map(doc => {
+  //     var lastBookTransaction = doc.data()
+  //     if (lastBookTransaction.student_id === studentId) {
+  //       isStudentEligible = true
+  //     } else {
+  //       isStudentEligible = false
+  //       Alert.alert('O livro não foi retirado por este aluno!')
+  //       this.setState({
+  //         bookId: '',
+  //         studentId: ''
+  //       })
+  //     }
+  //   })
+  //   return isStudentEligible
+  // }
 
   initiateBookIssue = async (bookId, studentId, bookName, studentName) => {
     // adicionar uma transação
@@ -159,7 +224,7 @@ export default class TransactionScreen extends Component {
         number_of_books_issued: firebase.firestore.FieldValue.increment(-1)
       })
 
-    // atualizando estado local
+    // Atualizando estado local
     this.setState({
       bookId: '',
       studentId: ''
@@ -177,7 +242,7 @@ export default class TransactionScreen extends Component {
       )
     }
     return (
-      <View style={styles.container}>
+      <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <ImageBackground source={bgImage} style={styles.bgImage}>
           <View style={styles.upperContainer}>
             <Image source={appIcon} style={styles.appIcon} />
@@ -190,6 +255,7 @@ export default class TransactionScreen extends Component {
                 placeholder={'ID do Livro'}
                 placeholderTextColor={'#FFFFFF'}
                 value={bookId}
+                onChangeText={text => this.setState({ bookId: text })}
               />
               <TouchableOpacity
                 style={styles.scanbutton}
@@ -204,6 +270,7 @@ export default class TransactionScreen extends Component {
                 placeholder={'ID do Aluno'}
                 placeholderTextColor={'#FFFFFF'}
                 value={studentId}
+                onChangeText={text => this.setState({ studentId: text })}
               />
               <TouchableOpacity
                 style={styles.scanbutton}
@@ -220,7 +287,7 @@ export default class TransactionScreen extends Component {
             </TouchableOpacity>
           </View>
         </ImageBackground>
-      </View>
+      </KeyboardAvoidingView>
     )
   }
 }
