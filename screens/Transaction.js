@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   Text,
   ImageBackground,
-  Image
+  Image,
+  KeyboardAvoidingView,
+  ToastAndroid
 } from 'react-native'
 import * as Permissions from 'expo-permissions'
 import { BarCodeScanner } from 'expo-barcode-scanner'
@@ -75,9 +77,11 @@ export default class TransactionScreen extends Component {
         if (book.is_book_available) {
           var { bookName, studentName } = this.state
           this.initiateBookIssue(bookId, studentId, bookName, studentName)
+          ToastAndroid.show('O Livro foi Entrege', ToastAndroid.SHORT)
         } else {
           var { bookName, studentName } = this.state
           this.initiateBookReturn(bookId, studentId, bookName, studentName)
+          ToastAndroid.show('O Livro foi Devolvido', ToastAndroid.SHORT)
         }
       })
   }
@@ -177,50 +181,54 @@ export default class TransactionScreen extends Component {
       )
     }
     return (
-      <View style={styles.container}>
-        <ImageBackground source={bgImage} style={styles.bgImage}>
-          <View style={styles.upperContainer}>
-            <Image source={appIcon} style={styles.appIcon} />
-            <Image source={appName} style={styles.appName} />
-          </View>
-          <View style={styles.lowerContainer}>
-            <View style={styles.textinputContainer}>
-              <TextInput
-                style={styles.textinput}
-                placeholder={'ID do Livro'}
-                placeholderTextColor={'#FFFFFF'}
-                value={bookId}
-              />
+      <KeyboardAvoidingView>
+        <View style={styles.container}>
+          <ImageBackground source={bgImage} style={styles.bgImage}>
+            <View style={styles.upperContainer}>
+              <Image source={appIcon} style={styles.appIcon} />
+              <Image source={appName} style={styles.appName} />
+            </View>
+            <View style={styles.lowerContainer}>
+              <View style={styles.textinputContainer}>
+                <TextInput
+                  style={styles.textinput}
+                  placeholder={'ID do Livro'}
+                  placeholderTextColor={'#FFFFFF'}
+                  value={bookId}
+                  onChangeText={text => this.setState({ bookId: text })}
+                />
+                <TouchableOpacity
+                  style={styles.scanbutton}
+                  onPress={() => this.getCameraPermissions('bookId')}
+                >
+                  <Text style={styles.scanbuttonText}>Digitalizar</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={[styles.textinputContainer, { marginTop: 25 }]}>
+                <TextInput
+                  style={styles.textinput}
+                  placeholder={'ID do Aluno'}
+                  placeholderTextColor={'#FFFFFF'}
+                  value={studentId}
+                  onChangeText={text => this.setState({ studentId: text })}
+                />
+                <TouchableOpacity
+                  style={styles.scanbutton}
+                  onPress={() => this.getCameraPermissions('studentId')}
+                >
+                  <Text style={styles.scanbuttonText}>Digitalizar</Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
-                style={styles.scanbutton}
-                onPress={() => this.getCameraPermissions('bookId')}
+                style={[styles.button, { marginTop: 25 }]}
+                onPress={this.handleTransaction}
               >
-                <Text style={styles.scanbuttonText}>Digitalizar</Text>
+                <Text style={styles.buttonText}>Enviar</Text>
               </TouchableOpacity>
             </View>
-            <View style={[styles.textinputContainer, { marginTop: 25 }]}>
-              <TextInput
-                style={styles.textinput}
-                placeholder={'ID do Aluno'}
-                placeholderTextColor={'#FFFFFF'}
-                value={studentId}
-              />
-              <TouchableOpacity
-                style={styles.scanbutton}
-                onPress={() => this.getCameraPermissions('studentId')}
-              >
-                <Text style={styles.scanbuttonText}>Digitalizar</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={[styles.button, { marginTop: 25 }]}
-              onPress={this.handleTransaction}
-            >
-              <Text style={styles.buttonText}>Enviar</Text>
-            </TouchableOpacity>
-          </View>
-        </ImageBackground>
-      </View>
+          </ImageBackground>
+        </View>
+      </KeyboardAvoidingView>
     )
   }
 }

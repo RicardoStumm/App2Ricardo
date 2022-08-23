@@ -1,10 +1,11 @@
 {
   "expo": {
-    "name": "c71",
-    "slug": "c71",
+    "name": "app2Ricardo",
+    "slug": "app2Ricardo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
